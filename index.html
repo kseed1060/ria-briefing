@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>리아 브리핑</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="리아 · 자산관리의 아침 브리핑과 뉴스 토픽, 포트폴리오 현황">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="theme-color" content="#0f1b33" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f6f3ee" media="(prefers-color-scheme: light)">
+<meta name="color-scheme" content="light dark">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="리아 브리핑">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="app">
+  <aside class="side" aria-label="메뉴">
+    <div class="brand">
+      <img src="icons/icon-192.png" alt="" width="40" height="40">
+      <div><strong>리아 브리핑</strong><span>자산관리 · 대표님 전용</span></div>
+    </div>
+    <nav id="nav-side" class="nav" aria-label="주요 메뉴"></nav>
+    <div class="side-bottom"><button class="lockbtn" type="button" id="side-lock" aria-label="잠그고 이 기기에서 로그아웃">잠금 · 로그아웃</button><p class="side-foot" id="side-foot"></p></div>
+  </aside>
+  <main id="main" class="main" tabindex="-1" aria-live="polite"></main>
+</div>
+<nav id="nav-tab" class="tabbar" aria-label="주요 메뉴"></nav>
+<div id="lock" class="lock" hidden></div>
+<div id="toast" class="toast" role="status" hidden></div>
+<noscript><p style="padding:24px">이 앱은 JavaScript가 필요해요.</p></noscript>
+<script src="js/app.js"></script>
+</body>
+</html>
