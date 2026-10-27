@@ -225,3 +225,22 @@ body.locked .app,body.locked .tabbar{display:none}
 .lock-card.shake{animation:shake .4s}
 .lockbtn{white-space:nowrap}
 .top-r{flex:none}
+
+/* 알림 설정 시트 */
+.bellbtn{padding:6px 10px}
+.sheet{position:fixed;inset:0;z-index:90;background:rgba(8,14,28,.55);display:grid;align-items:end;justify-items:center;
+  padding:calc(var(--sat) + 16px) calc(var(--sar) + 12px) calc(var(--sab) + 12px) calc(var(--sal) + 12px)}
+.sheet[hidden]{display:none}
+@media (min-width:640px){.sheet{align-items:center}}
+.sheet-card{width:100%;max-width:440px;background:var(--card);color:var(--ink);border-radius:22px;padding:20px;display:flex;flex-direction:column;gap:12px;box-shadow:0 20px 60px rgba(0,0,0,.35);max-height:90vh;overflow:auto}
+.sheet-card h2{font-size:19px;font-weight:800}
+.sheet-body{display:flex;flex-direction:column;gap:12px}
+.sheet-p{font-size:14.5px;line-height:1.6;color:var(--ink2)}
+.sheet-p.small{font-size:12px;color:var(--ink3)}
+.sheet-code{width:100%;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);font:12px/1.4 ui-monospace,Menlo,monospace;padding:10px;resize:none;word-break:break-all}
+.sheet-go{height:48px;font-size:16px}
+.sheet-ok{font-size:13.5px;font-weight:700;color:#2a8a57;min-height:18px}
+.sheet-err{color:#c0392b;min-height:18px}
+.sheet-off,.sheet-close{border:1px solid var(--line);background:none;color:var(--ink2);border-radius:12px;height:44px;font-size:14px;font-weight:700}
+.sheet-card .lock-go{border:0;border-radius:14px;background:linear-gradient(90deg,#e8743b,#f4a259);color:#1b1206;font-weight:800}
+.sheet-card .lock-go:disabled{opacity:.6}

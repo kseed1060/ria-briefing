@@ -2,20 +2,21 @@
  * - 앱 셸: 캐시 우선(오프라인에서도 열림)
  * - data/briefings.enc.json(암호문): 네트워크 우선, 실패하면 마지막 저장본
  * - 평문 데이터(briefings.json)는 요청도, 저장도 하지 않아요. 복호화된 내용은 메모리에만 있어요.
+ * - push: 알림에는 자산 수치를 넣지 않아요(고정 문구). 눌러서 앱을 열면 잠금 화면 → 비밀번호.
  * 앱 파일을 고치면 VERSION 숫자를 올리세요. */
-const VERSION = "v2";
+const VERSION = "v3";
 const SHELL = `ria-shell-${VERSION}`;
 const DATA = `ria-data-${VERSION}`;
 const ENC = "data/briefings.enc.json";
 const SHELL_FILES = [
-  "./", "index.html", "css/app.css", "js/app.js", "manifest.webmanifest",
+  "./", "index.html", "css/app.css", "js/config.js", "js/app.js", "manifest.webmanifest",
   "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png",
   "icons/apple-touch-icon.png", "icons/favicon-32.png"
 ];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(
-    caches.open(SHELL).then((c) => c.addAll(SHELL_FILES))
+    caches.open(SHELL).then((c) => c.addAll(SHELL_FILES.map((f) => new Request(f, { cache: "reload" }))))
       .then(() => caches.open(DATA)).then((c) => c.add(ENC))
       .then(() => self.skipWaiting())
   );
@@ -65,6 +66,32 @@ self.addEventListener("fetch", (e) => {
         return res;
       }).catch(() => hit);
       return hit || net;
+    })
+  );
+});
+
+/* ---------- 푸시 알림 ---------- */
+const DEFAULT_BODY = "☀️ 오늘의 투자 브리핑이 도착했어요";
+self.addEventListener("push", (e) => {
+  let title = "리아 브리핑", body = DEFAULT_BODY;
+  try { const d = e.data && e.data.json(); if (d) { title = d.title || title; body = d.body || body; } } catch (_) {}
+  e.waitUntil(self.registration.showNotification(title, {
+    body,
+    icon: "icons/icon-192.png",
+    badge: "icons/favicon-32.png",
+    tag: "ria-briefing",
+    renotify: true,
+    data: { url: "./" }
+  }));
+});
+
+self.addEventListener("notificationclick", (e) => {
+  e.notification.close();
+  const target = new URL((e.notification.data && e.notification.data.url) || "./", self.registration.scope).href;
+  e.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+      for (const c of list) { if (c.url.startsWith(self.registration.scope) && "focus" in c) return c.focus(); }
+      return self.clients.openWindow(target);
     })
   );
 });

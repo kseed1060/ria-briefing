@@ -74,6 +74,7 @@
       h("div", null, h("h1", { text: title }), sub ? h("div", { class: "sub", text: sub }) : null),
       h("div", { class: "top-r" },
         h("span", { class: "pill" + (state.offline ? " off" : ""), text: state.offline ? "오프라인 · 저장본" : "KST" }),
+        h("button", { class: "lockbtn bellbtn", type: "button", "aria-label": "알림 설정", onclick: showPush, text: "🔔" }),
         h("button", { class: "lockbtn", type: "button", "aria-label": "잠그고 이 기기에서 로그아웃", onclick: lockNow },
           h("span", { html: ICONS.lock, style: "display:contents" }), "잠금")));
   }
@@ -363,10 +364,88 @@
     render();
   }
   function lockNow() {
+    closeSheet();
     state.data = null; state.newsReport = null; state.newsCat = "전체"; state.rec = 0;
     document.getElementById("main").textContent = "";
     forgetKey().then(function () { location.hash = "#/"; showLock("잠겼어요. 이 기기에서 로그아웃했어요."); });
   }
+
+
+  /* ---------- 푸시 알림 (서버 없이: 구독 코드를 복사해 코디에게 전달) ---------- */
+  function b64u(buf) { var s = "", u = new Uint8Array(buf); for (var i = 0; i < u.length; i++) s += String.fromCharCode(u[i]); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); }
+  function b64uToBytes(s) { s = s.replace(/-/g, "+").replace(/_/g, "/"); while (s.length % 4) s += "="; return b64(s); }
+  function subCode(sub) {
+    var j = sub.toJSON();
+    return "RIA1." + b64u(enc.encode(JSON.stringify({ e: j.endpoint, p: j.keys.p256dh, a: j.keys.auth })));
+  }
+  function pushEnv() {
+    var ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    var standalone = navigator.standalone === true || (window.matchMedia && matchMedia("(display-mode: standalone)").matches);
+    var supported = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+    return { ios: ios, standalone: standalone, supported: supported };
+  }
+  function copyText(text, ta) {
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text);
+    return new Promise(function (res, rej) { ta.focus(); ta.select(); try { document.execCommand("copy") ? res() : rej(); } catch (e) { rej(e); } });
+  }
+  function closeSheet() { var s = document.getElementById("sheet"); s.hidden = true; s.textContent = ""; }
+  function showPush() {
+    if (!state.data) return;
+    var sheet = document.getElementById("sheet");
+    sheet.hidden = false; sheet.textContent = "";
+    var body = h("div", { class: "sheet-body" });
+    var card = h("div", { class: "sheet-card", role: "dialog", "aria-modal": "true", "aria-label": "알림 설정" },
+      h("h2", { text: "🔔 알림 설정" }), body,
+      h("button", { class: "sheet-close", type: "button", text: "닫기", onclick: closeSheet }));
+    sheet.appendChild(card);
+    sheet.onclick = function (e) { if (e.target === sheet) closeSheet(); };
+    var env = pushEnv();
+    function note(t) { body.appendChild(h("p", { class: "sheet-p", text: t })); }
+    if (env.ios && !env.standalone) {
+      note("아이폰은 홈 화면에 추가한 앱에서만 알림을 켤 수 있어요. (iOS 16.4 이상)");
+      note("Safari의 공유 버튼(□↑) → ‘홈 화면에 추가’ 후, 홈 화면의 리아 브리핑 아이콘으로 열어서 다시 눌러 주세요.");
+      return;
+    }
+    if (!env.supported) { note("이 브라우저는 알림을 지원하지 않아요. (아이폰은 iOS 16.4 이상, 홈 화면 앱에서만 가능해요)"); return; }
+    if (Notification.permission === "denied") { note("알림이 차단되어 있어요. 아이폰 설정 → 알림 → 리아 브리핑에서 허용한 뒤 다시 열어 주세요."); return; }
+    navigator.serviceWorker.ready.then(function (reg) {
+      return reg.pushManager.getSubscription().then(function (sub) {
+        if (sub) renderCode(reg, sub); else renderEnable(reg);
+      });
+    }).catch(function () { note("알림 준비 중 문제가 생겼어요. 앱을 닫았다가 다시 열어 주세요."); });
+
+    function renderEnable(reg) {
+      body.textContent = "";
+      note("평일 아침 브리핑이 올라오면 ‘☀️ 오늘의 투자 브리핑이 도착했어요’ 알림만 보내 드려요. 알림에는 금액 같은 자산 정보가 들어가지 않아요.");
+      var err = h("p", { class: "lock-err sheet-err" });
+      var btn = h("button", { class: "lock-go sheet-go", type: "button", text: "알림 켜기" });
+      btn.addEventListener("click", function () {
+        btn.disabled = true; err.textContent = "";
+        Notification.requestPermission().then(function (perm) {
+          if (perm !== "granted") throw new Error("denied");
+          return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uToBytes(window.RIA_CONFIG.vapidPublicKey) });
+        }).then(function (sub) { renderCode(reg, sub); })
+          .catch(function (e) { btn.disabled = false; err.textContent = e && e.message === "denied" ? "알림 허용이 필요해요. 다시 눌러 허용해 주세요." : "알림을 켜지 못했어요. 잠시 뒤 다시 시도해 주세요."; });
+      });
+      body.appendChild(err); body.appendChild(btn);
+    }
+    function renderCode(reg, sub) {
+      body.textContent = "";
+      var code = subCode(sub);
+      note("알림이 켜졌어요! 아래 코드를 코디에게 보내 주세요. 코디가 등록하면 이 기기로 알림이 가요.");
+      var ta = h("textarea", { class: "sheet-code", readonly: true, rows: "5", "aria-label": "알림 구독 코드" }); ta.value = code;
+      ta.addEventListener("focus", function () { ta.select(); });
+      var msg = h("p", { class: "sheet-ok", role: "status" });
+      var copy = h("button", { class: "lock-go sheet-go", type: "button", text: "복사", onclick: function () {
+        copyText(code, ta).then(function () { msg.textContent = "복사했어요. 코디에게 붙여넣어 보내 주세요."; }).catch(function () { ta.focus(); ta.select(); msg.textContent = "복사가 안 되면 코드를 길게 눌러 직접 복사해 주세요."; });
+      } });
+      var off = h("button", { class: "sheet-off", type: "button", text: "알림 끄기", onclick: function () {
+        sub.unsubscribe().then(function () { renderEnable(reg); }); } });
+      body.appendChild(ta); body.appendChild(copy); body.appendChild(msg); body.appendChild(off);
+      body.appendChild(h("p", { class: "sheet-p small", text: "이 코드는 이 기기로 알림을 보내는 주소예요(자산 정보는 들어 있지 않아요). 코디 외에는 공유하지 마세요." }));
+    }
+  }
+  window.addEventListener("keydown", function (e) { if (e.key === "Escape") closeSheet(); });
 
   /* ---------- 시작 ---------- */
   function boot() {
@@ -393,5 +472,6 @@
     navigator.serviceWorker.register("sw.js").catch(function () {});
   });
   document.getElementById("side-lock").addEventListener("click", lockNow);
+  document.getElementById("side-bell").addEventListener("click", showPush);
   boot();
 })();
