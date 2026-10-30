@@ -244,3 +244,5 @@ body.locked .app,body.locked .tabbar{display:none}
 .sheet-off,.sheet-close{border:1px solid var(--line);background:none;color:var(--ink2);border-radius:12px;height:44px;font-size:14px;font-weight:700}
 .sheet-card .lock-go{border:0;border-radius:14px;background:linear-gradient(90deg,#e8743b,#f4a259);color:#1b1206;font-weight:800}
 .sheet-card .lock-go:disabled{opacity:.6}
+
+.monthly-empty p:first-child{font-size:34px;margin-bottom:6px}.monthly-empty p:nth-child(2){font-size:16px;font-weight:700;color:var(--ink2)}

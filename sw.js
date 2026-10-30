@@ -4,7 +4,7 @@
  * - 평문 데이터(briefings.json)는 요청도, 저장도 하지 않아요. 복호화된 내용은 메모리에만 있어요.
  * - push: payload의 title(≤40자)/body(≤120자)를 그대로 표시, 비었거나 깨지면 고정 문구. 자산 수치 금지는 notify.mjs가 보증. 눌러서 앱을 열면 잠금 화면 → 비밀번호.
  * 앱 파일을 고치면 VERSION 숫자를 올리세요. */
-const VERSION = "v4";
+const VERSION = "v5";
 const SHELL = `ria-shell-${VERSION}`;
 const DATA = `ria-data-${VERSION}`;
 const ENC = "data/briefings.enc.json";

@@ -7,19 +7,21 @@
   var REMEMBER_DAYS = 30;
   var WD = ["일", "월", "화", "수", "목", "금", "토"];
   var COLORS = ["#e8743b", "#3b6fe8", "#2bb6a3", "#9aa6bf"];
-  var state = { data: null, enc: null, hashBound: false, offline: !navigator.onLine, newsReport: null, newsCat: "전체", rec: 0 };
+  var state = { data: null, enc: null, hashBound: false, offline: !navigator.onLine, newsReport: null, monthly: null, newsCat: "전체", rec: 0 };
 
   var ICONS = {
     home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/></svg>',
     news: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8M8 13h8M8 17h4"/></svg>',
     pie: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 9 9h-9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/></svg>',
     lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+    cal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>',
     list: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'
   };
   var NAV = [
     { path: "/", label: "오늘", icon: "home" },
     { path: "/news", label: "뉴스", icon: "news" },
     { path: "/portfolio", label: "포트폴리오", icon: "pie" },
+    { path: "/monthly", label: "월말", icon: "cal" },
     { path: "/archive", label: "기록", icon: "list" }
   ];
 
@@ -232,8 +234,8 @@
     var a = state.data.archive.slice().sort(function (x, y) { return (y.date + y.time).localeCompare(x.date + x.time); });
     var root = h("div", null, header("기록", "날짜별 보고 모음 · 모든 시각은 KST"));
     root.appendChild(h("div", { class: "card" }, h("ul", { class: "arch" }, a.map(function (e) {
-      var r = e.ref || {}, target = r.type === "briefing" ? "/briefing/" + r.id : r.type === "news" ? "/news" : r.type === "portfolio" ? "/portfolio" : null;
-      return h("li", null, h("button", { disabled: !target, onclick: function () { if (target) { if (r.type === "news") state.newsReport = r.id; go(target); } } },
+      var r = e.ref || {}, target = r.type === "briefing" ? "/briefing/" + r.id : r.type === "news" ? "/news" : r.type === "portfolio" ? "/portfolio" : r.type === "monthly" ? "/monthly" : null;
+      return h("li", null, h("button", { disabled: !target, onclick: function () { if (target) { if (r.type === "news") state.newsReport = r.id; if (r.type === "monthly") state.monthly = r.id; go(target); } } },
         h("span", { class: "k", text: e.kind }), h("span", { class: "dt", text: kdate(e.date) + " " + e.time }), h("span", { class: "sm", text: e.summary })));
     }))));
     root.appendChild(h("section", { class: "sec" }, h("h2", null, "자동 보고 루틴"),
@@ -246,6 +248,28 @@
     return root;
   }
 
+  /* ---------- 화면: 월말 적립 리포트 ---------- */
+  function viewMonthly() {
+    var reps = (state.data.monthlyReports || []).slice().sort(function (x, y) { return (y.date || "").localeCompare(x.date || ""); });
+    var root = h("div", null, header("월말 리포트", "리아의 월말 적립 정리 · 매달 마지막 평일 오전"));
+    if (!reps.length) { root.appendChild(h("div", { class: "card empty monthly-empty" }, h("p", { text: "🗓️" }), h("p", { text: "첫 리포트는 10월 30일에 도착해요" }), h("p", { class: "note", text: "리아가 매달 마지막 평일 오전 9시쯤 정리해 드려요." }))); return root; }
+    var r = state.monthly && reps.filter(function (x) { return x.id === state.monthly; })[0] || reps[0];
+    root.appendChild(h("section", { class: "hero" }, h("span", { class: "pill mid", text: (r.month || kdate(r.date)) + " 적립 리포트" }),
+      h("h2", { text: r.title || "이번 달 적립 정리" }), r.summary ? h("p", { text: r.summary }) : null));
+    (r.sections || []).forEach(function (sct) {
+      root.appendChild(h("section", { class: "sec" }, h("h2", { text: sct.title }),
+        h("div", { class: "card" }, sct.points && sct.points.length ? h("ul", { class: "dots" }, sct.points.map(function (t) { return h("li", { text: t }); })) : null,
+          sct.text ? h("p", { text: sct.text, style: "white-space:pre-line" }) : null)));
+    });
+    if (r.body && !(r.sections || []).length) root.appendChild(h("div", { class: "card" }, h("p", { text: r.body, style: "white-space:pre-line" })));
+    if (r.sources) root.appendChild(sources(r.sources));
+    if (reps.length > 1) root.appendChild(h("section", { class: "sec" }, h("h2", null, "지난 리포트"),
+      h("div", { class: "seg" }, reps.map(function (x) {
+        return h("button", { class: "chip", "aria-pressed": String(x.id === r.id), text: x.month || kdate(x.date), onclick: function () { state.monthly = x.id; render(); } });
+      }))));
+    return root;
+  }
+
   function viewEmpty(msg) { return h("div", { class: "card empty", text: msg }); }
 
   /* ---------- 라우터 ---------- */
@@ -255,6 +279,7 @@
     if (m) return { key: "/", view: function () { return viewBriefing(decodeURIComponent(m[1])); } };
     if (hash === "/news") return { key: "/news", view: viewNews };
     if (hash === "/portfolio") return { key: "/portfolio", view: viewPortfolio };
+    if (hash === "/monthly") return { key: "/monthly", view: viewMonthly };
     if (hash === "/archive") return { key: "/archive", view: viewArchive };
     return { key: "/", view: function () { return viewBriefing(null); } };
   }
