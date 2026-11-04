@@ -269,3 +269,5 @@ body.locked .app,body.locked .tabbar{display:none}
 .md-table th:first-child,.md-table td:first-child{text-align:left;white-space:normal}
 .md-table th{font-weight:700;color:var(--ink2)}
 .md-table tr.total td{font-weight:800}
+.stmt td.stmt-num{text-align:right;font-variant-numeric:tabular-nums}
+.stmt th:first-child,.stmt td:first-child{min-width:118px;max-width:150px}

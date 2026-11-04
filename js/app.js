@@ -214,8 +214,8 @@
           h("div", { class: "stmt-scroll" }, h("table", { class: "stmt" },
             h("thead", null, h("tr", null, st.columns.map(function (c) { return h("th", { text: c }); }))),
             h("tbody", null, st.rows.map(function (r) {
-              return h("tr", null, r.map(function (v, i) { return h("td", { class: (isNum(i) ? "num " : "") + (/손익|수익률/.test(st.columns[i] || "") ? signCls(v) : ""), text: v }); }));
-            }).concat(st.total ? [h("tr", { class: "total" }, st.total.map(function (v, i) { return h("td", { class: (isNum(i) ? "num " : "") + (/손익|수익률/.test(st.columns[i] || "") ? signCls(v) : ""), text: v }); }))] : [])))),
+              return h("tr", null, r.map(function (v, i) { return h("td", { class: (isNum(i) ? "stmt-num " : "") + (/손익|수익률/.test(st.columns[i] || "") ? signCls(v) : ""), text: v }); }));
+            }).concat(st.total ? [h("tr", { class: "total" }, st.total.map(function (v, i) { return h("td", { class: (isNum(i) ? "stmt-num " : "") + (/손익|수익률/.test(st.columns[i] || "") ? signCls(v) : ""), text: v }); }))] : [])))),
           st.extras && st.extras.length ? h("ul", { class: "stmt-extra" }, st.extras.map(function (e) { return h("li", null, e.label, h("b", { text: e.value })); })) : null)));
     }
 
