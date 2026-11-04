@@ -4,7 +4,7 @@
  * - 평문 데이터(briefings.json)는 요청도, 저장도 하지 않아요. 복호화된 내용은 메모리에만 있어요.
  * - push: payload의 title(≤40자)/body(≤120자)를 그대로 표시, 비었거나 깨지면 고정 문구. 자산 수치 금지는 notify.mjs가 보증. 눌러서 앱을 열면 잠금 화면 → 비밀번호.
  * 앱 파일을 고치면 VERSION 숫자를 올리세요. */
-const VERSION = "v8";
+const VERSION = "v9";
 const SHELL = `ria-shell-${VERSION}`;
 const DATA = `ria-data-${VERSION}`;
 const ENC = "data/briefings.enc.json";
@@ -51,7 +51,7 @@ self.addEventListener("fetch", (e) => {
 
   if (req.mode === "navigate") {
     e.respondWith(
-      fetch(req).then((res) => {
+      fetch(req, { cache: "no-store" }).then((res) => {
         if (res.ok) { const copy = res.clone(); caches.open(SHELL).then((c) => c.put("index.html", copy)); }
         return res;
       }).catch(() => caches.match("index.html", { ignoreSearch: true }))
@@ -59,6 +59,16 @@ self.addEventListener("fetch", (e) => {
     return;
   }
 
+  const isCode = /\.(js|css|html|webmanifest)$/.test(url.pathname) || url.pathname.endsWith("/");
+  if (isCode) { // 앱 코드: 네트워크 우선(항상 최신), 오프라인이면 캐시
+    e.respondWith(
+      fetch(req, { cache: "no-store" }).then((res) => {
+        if (res.ok) { const copy = res.clone(); caches.open(SHELL).then((c) => c.put(url.pathname.split("/").pop() ? new Request(url.origin + url.pathname) : req, copy)); }
+        return res;
+      }).catch(() => caches.match(req, { ignoreSearch: true }))
+    );
+    return;
+  }
   e.respondWith(
     caches.match(req, { ignoreSearch: true }).then((hit) => {
       const net = fetch(req).then((res) => {

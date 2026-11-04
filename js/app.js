@@ -540,7 +540,12 @@
   window.addEventListener("online", function () { state.offline = false; toast("다시 온라인이에요"); if (state.data) render(); });
   window.addEventListener("offline", function () { state.offline = true; toast("오프라인이에요. 저장된 브리핑을 보여드려요"); if (state.data) render(); });
   if ("serviceWorker" in navigator) window.addEventListener("load", function () {
-    navigator.serviceWorker.register("sw.js").catch(function () {});
+    navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then(function (reg) {
+      reg.update();
+      document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") reg.update(); });
+    }).catch(function () {});
+    var hadCtl = !!navigator.serviceWorker.controller, reloaded = false;
+    navigator.serviceWorker.addEventListener("controllerchange", function () { if (hadCtl && !reloaded) { reloaded = true; location.reload(); } });
   });
   document.getElementById("side-lock").addEventListener("click", lockNow);
   document.getElementById("side-bell").addEventListener("click", showPush);

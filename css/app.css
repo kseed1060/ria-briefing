@@ -271,3 +271,5 @@ body.locked .app,body.locked .tabbar{display:none}
 .md-table tr.total td{font-weight:800}
 .stmt td.stmt-num{text-align:right;font-variant-numeric:tabular-nums}
 .stmt th:first-child,.stmt td:first-child{min-width:118px;max-width:150px}
+.stmt td.num,.stmt td.stmt-num{width:auto;height:auto;border-radius:0;background:none;color:var(--ink);font-size:13px;font-weight:400;display:table-cell;margin:0;text-align:right}
+.stmt td.num.neg,.stmt td.stmt-num.neg{color:var(--con,#d64545)}
