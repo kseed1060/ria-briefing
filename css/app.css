@@ -246,3 +246,16 @@ body.locked .app,body.locked .tabbar{display:none}
 .sheet-card .lock-go:disabled{opacity:.6}
 
 .monthly-empty p:first-child{font-size:34px;margin-bottom:6px}.monthly-empty p:nth-child(2){font-size:16px;font-weight:700;color:var(--ink2)}
+/* 보유 현황 표 */
+.stmt-wrap{padding:0;overflow:hidden}
+.stmt-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.stmt{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.stmt th{position:sticky;top:0;background:var(--bg2);color:var(--ink2);font-weight:700;font-size:12px;text-align:right;padding:9px 10px;border-bottom:1px solid var(--line)}
+.stmt th:first-child,.stmt td:first-child{text-align:left;position:sticky;left:0;background:var(--card);white-space:normal;min-width:130px;max-width:170px;font-weight:600}
+.stmt th:first-child{background:var(--bg2)}
+.stmt td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:right;color:var(--ink)}
+.stmt td.neg{color:var(--con,#d64545)}
+.stmt tr.total td{font-weight:800;background:var(--bg2);border-bottom:0}
+.stmt-extra{list-style:none;margin:0;padding:10px 14px;border-top:1px solid var(--line);font-size:13px;color:var(--ink2)}
+.stmt-extra li{display:flex;justify-content:space-between;gap:10px;padding:3px 0}
+.stmt-extra b{color:var(--ink);font-variant-numeric:tabular-nums}

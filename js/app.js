@@ -205,6 +205,20 @@
       h("div", { class: "metric" }, h("div", { class: "l", text: "이달 매수일" }),
         h("div", { class: "v", text: kdate(p.nextBuyDate) }), h("div", { class: "d", text: p.nextBuyNote + " · 월 " + won(p.monthlyBudget) }))));
 
+    var st = p.statement;
+    if (st && st.rows && st.rows.length) {
+      var isNum = function (i) { return i > 0; };
+      var signCls = function (v) { return /^-/.test(v) ? "neg" : ""; };
+      root.appendChild(h("section", { class: "sec" }, h("h2", null, "보유 현황", h("small", { text: kdate(st.asOf) + " 기준" + (st.broker ? " · " + st.broker : "") })),
+        h("div", { class: "card stmt-wrap" },
+          h("div", { class: "stmt-scroll" }, h("table", { class: "stmt" },
+            h("thead", null, h("tr", null, st.columns.map(function (c) { return h("th", { text: c }); }))),
+            h("tbody", null, st.rows.map(function (r) {
+              return h("tr", null, r.map(function (v, i) { return h("td", { class: (isNum(i) ? "num " : "") + (/손익|수익률/.test(st.columns[i] || "") ? signCls(v) : ""), text: v }); }));
+            }).concat(st.total ? [h("tr", { class: "total" }, st.total.map(function (v, i) { return h("td", { class: (isNum(i) ? "num " : "") + (/손익|수익률/.test(st.columns[i] || "") ? signCls(v) : ""), text: v }); }))] : [])))),
+          st.extras && st.extras.length ? h("ul", { class: "stmt-extra" }, st.extras.map(function (e) { return h("li", null, e.label, h("b", { text: e.value })); })) : null)));
+    }
+
     var holds = p.holdings.slice().sort(function (a, b) { return b.weightPct - a.weightPct; });
     root.appendChild(h("section", { class: "sec" }, h("h2", null, "비중"),
       h("div", { class: "card donut-wrap" }, donut(holds),
