@@ -273,3 +273,8 @@ body.locked .app,body.locked .tabbar{display:none}
 .stmt th:first-child,.stmt td:first-child{min-width:118px;max-width:150px}
 .stmt td.num,.stmt td.stmt-num{width:auto;height:auto;border-radius:0;background:none;color:var(--ink);font-size:13px;font-weight:400;display:table-cell;margin:0;text-align:right}
 .stmt td.num.neg,.stmt td.stmt-num.neg{color:var(--con,#d64545)}
+/* v10: 모든 표 공통 — 가로 스크롤, 첫 열 고정·최소폭, 나머지 한 줄 */
+.tbl-wrap,.md-tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
+.tbl-wrap table,.md-table{width:max-content;min-width:100%;table-layout:auto}
+.tbl-wrap th,.tbl-wrap td,.md-table th,.md-table td{white-space:nowrap}
+.tbl-wrap th:first-child,.tbl-wrap td:first-child,.md-table th:first-child,.md-table td:first-child{white-space:normal;word-break:keep-all;overflow-wrap:break-word;min-width:8em;max-width:11em;position:sticky;left:0;z-index:1;background:var(--card)}
