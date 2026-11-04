@@ -259,3 +259,13 @@ body.locked .app,body.locked .tabbar{display:none}
 .stmt-extra{list-style:none;margin:0;padding:10px 14px;border-top:1px solid var(--line);font-size:13px;color:var(--ink2)}
 .stmt-extra li{display:flex;justify-content:space-between;gap:10px;padding:3px 0}
 .stmt-extra b{color:var(--ink);font-variant-numeric:tabular-nums}
+/* 월말 리포트 마크다운 */
+.card.md .md-h{font-size:16px;font-weight:800;margin:18px 0 8px}
+.card.md .md-h:first-child{margin-top:0}
+.card.md p{font-size:14.5px;line-height:1.65;margin:8px 0;color:var(--ink2)}
+.md-tablewrap{overflow-x:auto;margin:8px 0}
+.md-table{width:100%;border-collapse:collapse;font-size:14px}
+.md-table th,.md-table td{padding:8px 6px;border-bottom:1px solid rgba(127,127,127,.2);text-align:right;white-space:nowrap}
+.md-table th:first-child,.md-table td:first-child{text-align:left;white-space:normal}
+.md-table th{font-weight:700;color:var(--ink2)}
+.md-table tr.total td{font-weight:800}

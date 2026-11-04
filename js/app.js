@@ -262,11 +262,42 @@
     return root;
   }
 
+  /* ---------- 간단 마크다운 렌더(제목·표·목록·굵게, 텍스트는 안전하게 text로만) ---------- */
+  function mdInline(t) {
+    var out = h("span"); t.split(/(\*\*[^*]+\*\*)/).forEach(function (p) {
+      if (/^\*\*[^*]+\*\*$/.test(p)) out.appendChild(h("b", { text: p.slice(2, -2) })); else if (p) out.appendChild(document.createTextNode(p)); });
+    return out;
+  }
+  function mdRender(md) {
+    var root = h("div"), L = md.split("\n"), i = 0, cells = function (l) { return l.trim().replace(/^\||\|$/g, "").split("|").map(function (c) { return c.trim(); }); };
+    while (i < L.length) {
+      var l = L[i];
+      if (!l.trim()) { i++; continue; }
+      var hm = l.match(/^(#{1,4})\s+(.*)$/);
+      if (hm) { root.appendChild(h(hm[1].length <= 2 ? "h3" : "h4", { class: "md-h" }, mdInline(hm[2]))); i++; continue; }
+      if (/^\s*\|/.test(l)) {
+        var rows = []; while (i < L.length && /^\s*\|/.test(L[i])) { rows.push(L[i]); i++; }
+        var head = cells(rows[0]), bodyRows = rows.slice(1).filter(function (r) { return !/^\s*\|[\s:|-]+\|?\s*$/.test(r); });
+        root.appendChild(h("div", { class: "md-tablewrap" }, h("table", { class: "md-table" },
+          h("thead", null, h("tr", null, head.map(function (c) { return h("th", null, mdInline(c)); }))),
+          h("tbody", null, bodyRows.map(function (r) { var c = cells(r); return h("tr", { class: /합계/.test(c[0]) ? "total" : null }, c.map(function (x) { return h("td", null, mdInline(x)); })); })))));
+        continue;
+      }
+      if (/^\s*[-*]\s+/.test(l)) {
+        var items = []; while (i < L.length && /^\s*[-*]\s+/.test(L[i])) { items.push(L[i].replace(/^\s*[-*]\s+/, "")); i++; }
+        root.appendChild(h("ul", { class: "dots" }, items.map(function (t) { return h("li", null, mdInline(t)); }))); continue;
+      }
+      var para = []; while (i < L.length && L[i].trim() && !/^(#{1,4}\s|\s*\||\s*[-*]\s)/.test(L[i])) { para.push(L[i]); i++; }
+      root.appendChild(h("p", { class: /^※/.test(para[0]) ? "note" : null }, mdInline(para.join(" "))));
+    }
+    return root;
+  }
+
   /* ---------- 화면: 월말 적립 리포트 ---------- */
   function viewMonthly() {
     var reps = (state.data.monthlyReports || []).slice().sort(function (x, y) { return (y.date || "").localeCompare(x.date || ""); });
     var root = h("div", null, header("월말 리포트", "리아의 월말 적립 정리 · 매달 마지막 평일 오전"));
-    if (!reps.length) { root.appendChild(h("div", { class: "card empty monthly-empty" }, h("p", { text: "🗓️" }), h("p", { text: "첫 리포트는 10월 30일에 도착해요" }), h("p", { class: "note", text: "리아가 매달 마지막 평일 오전 9시쯤 정리해 드려요." }))); return root; }
+    if (!reps.length) { root.appendChild(h("div", { class: "card empty monthly-empty" }, h("p", { text: "🗓️" }), h("p", { text: "아직 도착한 리포트가 없어요" }), h("p", { class: "note", text: "리아가 매달 마지막 평일 오전 9시쯤 정리해 드려요." }))); return root; }
     var r = state.monthly && reps.filter(function (x) { return x.id === state.monthly; })[0] || reps[0];
     root.appendChild(h("section", { class: "hero" }, h("span", { class: "pill mid", text: (r.month || kdate(r.date)) + " 적립 리포트" }),
       h("h2", { text: r.title || "이번 달 적립 정리" }), r.summary ? h("p", { text: r.summary }) : null));
@@ -275,6 +306,7 @@
         h("div", { class: "card" }, sct.points && sct.points.length ? h("ul", { class: "dots" }, sct.points.map(function (t) { return h("li", { text: t }); })) : null,
           sct.text ? h("p", { text: sct.text, style: "white-space:pre-line" }) : null)));
     });
+    if (r.markdown) root.appendChild(h("div", { class: "card md" }, mdRender(r.markdown)));
     if (r.body && !(r.sections || []).length) root.appendChild(h("div", { class: "card" }, h("p", { text: r.body, style: "white-space:pre-line" })));
     if (r.sources) root.appendChild(sources(r.sources));
     if (reps.length > 1) root.appendChild(h("section", { class: "sec" }, h("h2", null, "지난 리포트"),
